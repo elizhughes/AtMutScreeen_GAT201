@@ -31,6 +31,24 @@ Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
 Seed at OD 600nm = 0.2 , 200 ul per well.
 Run for 147 cycles.
 
-#Plate 5:
+# Plate 5: 20230427
+Test At dbl-GAT201 mutant P2.7ZH_C5-C12 and D1-D12 and E1 from Plate 1_P2,7ZH(glycerol stock) in RPMI at 37 degrees.
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 143 cycles.
 
+# Plate 6: 20230428
+Test At dbl-GAT201 mutant P2.28EH_C5-C12 and D1-D12 and E1 from Plate1_P2.28EH(glycerol stock) in RPMI at 37 degrees..
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 250 cycles.
+
+# Plate 7: 20230428
+Test  P2.28EH_E2 and E4-E7 and E9-E12 and F1-F11  from Plate 1_P2.28EH(glycerol stock) in RPMI at 37 degrees..
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 300 cycles.
 
