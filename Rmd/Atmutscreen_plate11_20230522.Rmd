@@ -1,0 +1,241 @@
+---
+title: "Atmutscreen_plate11"
+author: "Liz Hughes"
+date: "2023/05/17"
+output: 
+  html_document:
+    toc: yes
+    toc_depth: 2
+  word_document:
+    toc: yes
+    toc_depth: '2'
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# At Plate reader assay 11 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees
+
+ At dbl-GAT201 mutant P2.7ZH_G4-G12, H1-H11 from Plate 1_P2,7ZH(glycerol stock, called dblGAT201a)  in RPMI at 37 degrees.
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 136 cycles.
+
+```{r load_packages_2}
+
+library("reshape2")
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(rmarkdown)
+library(cowplot)
+library(yaml)
+library(knitr)
+```
+
+
+
+# Read in transposed data as csv file RPMI
+
+```{r csv_file_2}
+
+rawdata <- read.csv("../Input/20230517_Atmutant_Screen_plate11_csv.csv")
+
+```
+
+# Change time in seconds to time in days RPMI
+
+```{r mutate_time_2}
+
+ rawdata_day<-mutate(rawdata, Time = Time/86400)
+
+```
+
+# Tidy the data using the melt function from reshape2 RPMI
+
+```{r reshape_2}
+
+reshaped <- melt(rawdata_day, id=c("Time", "Temp"), 
+                              variable.name="Well",
+                              value.name="OD595")
+
+summary(reshaped)
+```
+
+# Read in the Plate map data from csv file RPMI
+
+```{r Load_platemap_2}
+
+platemap <- read.csv("../Input/20230517_RPMI_Atmut_screen_Plate11_setup.csv") %>%     
+  dplyr::mutate(
+    Strain = factor(Strain, 
+                    levels = c( "P2.7G4","P2.7G5","P2.7G6","P2.7G7","P2.7G8","P2.7G9","P2.7G10","P2.7G11","P2.7G12","P2.7H1","P2.7H2","P2.7H3","P2.7H4","P2.7H5","P2.7H6","P2.7H7","P2.7H8","P2.7H9","P2.7H10","P2.7H11"),
+                    labels = c("dblGAT201a-G4", "dblGAT201a-G5", "dblGAT201a-G6", "dblGAT201a-G7", "dblGAT201a-G8", "dblGAT201a-G9", "dblGAT201a-G10", "dblGAT201a-G11", "dblGAT201a-G12", "dblGAT201a-H1", "dblGAT201a-H2", "dblGAT201a-H3", "dblGAT201a-H4", "dblGAT201a-H5", "dblGAT201a-H6", "dblGAT201a-H7", "dblGAT201a-H8", "dblGAT201a-H9", "dblGAT201a-H10", "dblGAT201a-H11"))
+  )
+head(platemap, n=10)
+
+
+```
+
+# Combine the reshaped data with the plate map, pairing them by Well 
+
+```{r join_2}
+
+annotated <- inner_join(reshaped, platemap, by="Well")
+ 
+```
+
+# How stable are ODs of blank wells, to use for normalisation? RPMI
+
+```{r plot_blank_ODs_2}
+
+ggplot(data=filter(annotated,is.na(Strain)),
+          aes(x=Time, y=OD595,  group = Well)) + 
+          geom_line() + 
+          labs(x="Time (days)", y="Absorbance at 595 nm")
+```
+
+
+```{r plot_individual_blank_wells_2}
+
+ggplot(data=filter(annotated,Well=="F1"), 
+       aes(x=Time, y=OD595, group = Well)) + 
+ 
+       geom_line() + 
+     theme_bw()+
+     labs(x="Time (hrs)", y="Absorbance at 595 nm")
+
+```
+
+
+Remove well A7, F1
+
+## Calculate median OD for blank wells for each growth medium RPMI
+
+
+```{r calc_blank_medians_2}
+
+blank_OD_summary <- annotated %>%
+   filter(is.na(Strain), Time < 1/24) %>%
+  filter(Well != "A7") %>%
+  filter(Well != "F1") %>%
+  group_by(Media) %>%
+  summarise(OD_median=median(OD595),
+            OD_mean=mean(OD595),
+            OD_max=max(OD595),
+            OD_min=min(OD595))
+print(blank_OD_summary)
+```
+
+# Subtract blank OD to make corrected OD and Plot OD_corrected v Time (hrs) RPMI
+
+```{r subtract_blank_OD_2}
+
+normalisedOD <- annotated %>%
+  left_join(blank_OD_summary, by="Media") %>%
+  mutate(OD_corrected = OD595 - OD_median)
+
+```
+
+## Plot OD all RPMI
+
+```{r plot_all_2}
+
+ggplot(data=normalisedOD %>%
+                       filter( !is.na(Strain) ), 
+                      aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
+       geom_line() + 
+       scale_y_continuous(limits=c(0,0.15),expand=c(0,0))+
+       facet_wrap(Strain ~ .)+
+  
+       labs(x = "Time(Hrs)",
+            y = "Absorbance (595nm)") +
+       theme(text = element_text(size = 20))+
+       theme_bw()
+```
+
+
+## Plot OD all stat_summary(geom -"line") remove excess lines RPMI
+
+```{r plot_stat_summary_At2}
+
+ggplot(data=normalisedOD  %>%
+          #dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A1","P2.7A2","P2.7A3","P2.7A4","P2.7A5","P2.7A6","P2.7A7","P2.7A8","P2.7A9","P2.28A1","P2.28A2","P2.28A3","P2.28A4","P2.28A5","P2.28A6","P2.28A7","P2.28A8","P2.28A9" )))%>%
+                     filter( !is.na(Strain) ),  
+                      aes(x=Time, y=OD_corrected, color=Strain)) + 
+        stat_summary(fun = "median", geom = "line", size = 0.5) +
+       scale_y_continuous(limits=c(0,0.12),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
+       labs(x = "Number of Days",
+            y = "Absorbance (595nm)",
+            title = "At mutant screen", subtitle = "Plate 11: RPMI at 37 degrees") +
+       theme_bw() +
+       theme(text = element_text(size = 15))+
+       theme(axis.title = element_text(size = 15))+
+       theme(axis.ticks.length = unit(0.3, "cm"))+
+       theme(title = element_text(size = 15))+
+       theme(panel.grid.minor = element_blank())+
+    guides(color=guide_legend(ncol=2))+
+ theme(legend.title = element_text(size = 15))+
+      theme(legend.background = element_rect(fill = "transparent", color=NA))+
+  theme(legend.key = element_rect(fill = "transparent", color=NA))+
+       theme (plot.background =  element_rect(fill = "transparent", color=NA), 
+         panel.background = element_rect(fill = "transparent", color=NA),)+
+      theme(panel.border = element_rect(linetype = "solid", colour = "black", size = 2))+
+  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5) )
+       
+```
+
+
+```{r save_RMPI_PR2_At_Allsum.png}
+
+ggsave("../Results/AllSummary_At11.png",width = 8,height=5)
+```
+
+
+## Plot OD all stat_summary(geom -"line") Highlight summary line RPMI
+
+```{r plot_all_stat_summary_At2}
+
+
+ggplot(data=normalisedOD  %>%
+          #dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A1","P2.7A2","P2.7A3","P2.7A4","P2.7A5","P2.7A6","P2.7A7","P2.7A8","P2.7A9","P2.28A1","P2.28A2","P2.28A3","P2.28A4","P2.28A5","P2.28A6","P2.28A7","P2.28A8","P2.28A9" )))%>%
+                     filter( !is.na(Strain) ),  
+                      aes(x=Time, y=OD_corrected, color=Strain)) + 
+       geom_line(aes(group = Well), size = 0.2, alpha = 0.2) + 
+       stat_summary(fun = "median", geom = "line", size = 0.5) +
+       scale_y_continuous(limits=c(0,0.12),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
+   
+       labs(x = "Number of Days",
+            y = "Absorbance (595nm)",
+            title = "GAT201 Targets", subtitle = "Plate 11: RPMI at 37 degrees") +
+
+                  theme_bw() +
+       theme(text = element_text(size = 15))+
+       theme(axis.title = element_text(size = 15))+
+             theme(axis.ticks.length = unit(0.3, "cm"))+
+       theme(title = element_text(size = 15))+
+       theme(panel.grid.minor = element_blank())+
+            guides(color=guide_legend(ncol=2))+
+       theme(legend.title = element_text(size = 15))+
+      theme(legend.background = element_rect(fill = "transparent", color=NA))+
+      theme(legend.key = element_rect(fill = "transparent", color=NA))+
+       theme (plot.background =  element_rect(fill = "transparent", color=NA), 
+            panel.background = element_rect(fill = "transparent", color=NA),)+
+      theme(panel.border = element_rect(linetype = "solid", colour = "black", size = 1))+
+      theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
+```
+
+```{r save_RMPI_PR2_At2_statsum.png}
+
+ggsave("../Results/Statsumm_At11.png",width = 8,height=5)
+```
+
+
+
+
