@@ -2,7 +2,7 @@
 title: "Atmutscreen_plate3"
 author: "Liz Hughes"
 date: "2023/04/06"
-output: output:
+output: 
   html_document:
     toc: yes
     toc_depth: 2
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # At Plate reader assay 3 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees
 
-Test WT KN99-alpha and GAT201 deletion mutant 003(Madhani), and At dbl-GAT201 mutant P2.7ZH_A10-A12 and B1-B6 from Plate 1_P2.7ZH(glycerol stock) and At dbl-GAT201 mutant P2.28EH_A10-A12 and B1-B6 from Plate 1_P2.28EH(glycerol stock) in RPMI at 37 degrees.
+Test WT KN99-alpha and GAT201 deletion mutant 003(Madhani), and At dbl-GAT201 mutant P2.7ZH_A10-A12 and B1-B6 from Plate 1_P2.7ZH(glycerol stock, called dblGAT201a) and At dbl-GAT201 mutant P2.28EH_A10-A12 and B1-B6 from Plate 1_P2.28EH(glycerol stock, called dblGAT201b) in RPMI at 37 degrees.
 1 Bioreps, 3 Techreps each.
 Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
 Seed at OD 600nm = 0.2 , 200 ul per well.
@@ -72,8 +72,13 @@ summary(reshaped)
 
 ```{r Load_platemap_3}
 
-platemap <- read.csv("../Input/20230406_RPMI_Atmut_screen_Plate3_setup.csv")
-head(platemap, n=50)
+platemap <- read.csv("../Input/20230406_RPMI_Atmut_screen_Plate3_setup.csv") %>%     
+  dplyr::mutate(
+    Strain = factor(Strain, 
+                    levels = c("KN99 (WT)", "GAT201", "P2.7A10", "P2.7A11","P2.7A12","P2.7B1","P2.7B2","P2.7B3","P2.7B4","P2.7B5","P2.7B6","P2.28A10", "P2.28A11","P2.28A12","P2.28B1","P2.28B2","P2.28B3","P2.28B4","P2.28B5","P2.28B6"),
+                    labels = c("WT", "gat201∆", "dblGAT201a-A10", "dblGAT201a-A11","dblGAT201a-A12","dblGAT201a-B1","dblGAT201a-B2","dblGAT201a-B3","dblGAT201a-B4","dblGAT201a-B5","dblGAT201a-B6", "dblGAT201b-A10","dblGAT201b-A11","dblGAT201b-A12","dblGAT201b-B1","dblGAT201b-B2","dblGAT201b-B3","dblGAT201b-B4","dblGAT201b-B5","dblGAT201b-B6"))
+  )
+head(platemap, n=10)
 
 
 ```
@@ -90,38 +95,34 @@ annotated <- inner_join(reshaped, platemap, by="Well")
 
 ```{r plot_blank_ODs_3}
 
-ggplot(data=filter(annotated,Strain==""),
-           aes(x=Time, y=OD595, color=Strain, group = Well)) + 
-       geom_line() + 
-       facet_grid(Media ~ .) +
-       labs(x="Time (days)", y="Absorbance at 595 nm")
+ggplot(data=filter(annotated,is.na(Strain)),
+           aes(x=Time, y=OD595, group = Well)) + 
+          geom_line() + 
+          labs(x="Time (days)", y="Absorbance at 595 nm")
 ```
 
 
 ```{r plot_individual_blank_wells_3}
 
 ggplot(data=filter(annotated,Well=="A1"), 
-       aes(x=Time, y=OD595, color=Strain, group = Well)) + 
- 
+       aes(x=Time, y=OD595, group = Well)) + 
        geom_line() + 
-     theme_bw()+
-     labs(x="Time (hrs)", y="Absorbance at 595 nm")
+       theme_bw()+
+       labs(x="Time (hrs)", y="Absorbance at 595 nm")
 
 ```
 
 
-Remove well A1
+Remove well A1 if using all od values, not below since only using first hour of data to normalize.
 
-## Calculate median OD for blank wells for each growth medium RPMI
+## Calculate median OD for blank wells for each growth medium RPMI in first hour
 
 
 ```{r calc_blank_medians_3}
 
 blank_OD_summary <- annotated %>%
-  filter(Strain=="") %>%
-  filter(Well != "A1") %>%
-  
-    group_by(Media) %>%
+      filter(is.na(Strain), Time < 1/24) %>%
+      group_by(Media) %>%
   summarise(OD_median=median(OD595),
             OD_mean=mean(OD595),
             OD_max=max(OD595),
@@ -144,10 +145,10 @@ normalisedOD <- annotated %>%
 ```{r plot_all_At3}
 
 ggplot(data=normalisedOD %>%
-                      filter(Strain != ""), 
+                     filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
        geom_line() + 
-       scale_y_continuous(limits=c(0,0.05),expand=c(0,0))+
+       scale_y_continuous(limits=c(0,0.12),expand=c(0,0))+
        facet_wrap(Strain ~ .)+
   
        labs(x = "Time(Hrs)",
@@ -162,11 +163,11 @@ ggplot(data=normalisedOD %>%
 ```{r plot_stat_summary_At3}
 
 ggplot(data=normalisedOD %>%
-          dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A10","P2.7A11","P2.7A12","P2.7B1","P2.7B2","P2.7B3","P2.7B4","P2.7B5","P2.7B6","P2.28A10","P2.28A11","P2.28A12","P2.28B1","P2.28B2","P2.28B3","P2.28B4","P2.28B5","P2.28B6" )))%>%
-                     filter(Strain != ""), 
+          #dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A10","P2.7A11","P2.7A12","P2.7B1","P2.7B2","P2.7B3","P2.7B4","P2.7B5","P2.7B6","P2.28A10","P2.28A11","P2.28A12","P2.28B1","P2.28B2","P2.28B3","P2.28B4","P2.28B5","P2.28B6" )))%>%
+                     filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        stat_summary(fun = "median", geom = "line", size = 0.5) +
-       scale_y_continuous(limits=c(0,0.05),expand=c(0,0), breaks = c(0, 0.25, 0.05)) +
+       scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
   
        labs(x = "Number of Days",
             y = "Absorbance (595nm)",
@@ -202,15 +203,12 @@ ggsave("../Results/AllSummary_At3.png",width = 8,height=5)
 ```{r plot_all_stat_summary_At3}
 
 ggplot(data=normalisedOD %>%
-          dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A10","P2.7A11","P2.7A12","P2.7B1","P2.7B2","P2.7B3","P2.7B4","P2.7B5","P2.7B6","P2.28A10","P2.28A11","P2.28A12","P2.28B1","P2.28B2","P2.28B3","P2.28B4","P2.28B5","P2.28B6" )))%>%
-                     filter(Strain != ""), 
+          #dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A10","P2.7A11","P2.7A12","P2.7B1","P2.7B2","P2.7B3","P2.7B4","P2.7B5","P2.7B6","P2.28A10","P2.28A11","P2.28A12","P2.28B1","P2.28B2","P2.28B3","P2.28B4","P2.28B5","P2.28B6" )))%>%
+                     filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
-       geom_line(aes(group = Well), size = 0.2, alpha = 0.2) + 
        stat_summary(fun = "median", geom = "line", size = 0.5) +
-      
-    
-       scale_y_continuous(limits=c(0,0.05),expand=c(0,0), breaks = c(0, 0.25, 0.05)) +
-   labs(x = "Number of Days",
+       scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
+       labs(x = "Number of Days",
             y = "Absorbance (595nm)",
             title = "At mutant screen", subtitle = "Plate 3: RPMI at 37 degrees") +
        theme_bw() +

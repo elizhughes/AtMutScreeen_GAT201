@@ -2,7 +2,7 @@
 title: "Atmutscreen_plate7"
 author: "Liz Hughes"
 date: "2023/05/01"
-output: output:
+output: 
   html_document:
     toc: yes
     toc_depth: 2
@@ -72,8 +72,13 @@ summary(reshaped)
 
 ```{r Load_platemap_7}
 
-platemap <- read.csv("../Input/20230428_RPMI_Atmut_screen_Plate7_setup.csv")
-head(platemap, n=50)
+platemap <- read.csv("../Input/20230428_RPMI_Atmut_screen_Plate7_setup.csv")%>%
+   dplyr::mutate(
+    Strain = factor(Strain, 
+      levels = c("P2.28E2", "P2.28E4","P2.28E5","P2.28E6","P2.28E7","P2.28E9","P2.28E10","P2.28E11","P2.28E12","P2.28F1", "P2.28F2","P2.28F3","P2.28F4","P2.28F5","P2.28F6","P2.28F7","P2.28F8","P2.28F9","P2.28F10","P2.28F11"),
+                    labels = c("dblGAT201b-E2", "dblGAT201b-E4","dblGAT201b-E5","dblGAT201b-E6","dblGAT201b-E7","dblGAT201b-E9","dblGAT201b-E10","dblGAT201b-E11","dblGAT201b-E12","dblGAT201b-F1", "dblGAT201b-F2","dblGAT201b-F3","dblGAT201b-F4","dblGAT201b-F5","dblGAT201b-F6","dblGAT201b-F7","dblGAT201b-F8","dblGAT201b-F9","dblGAT201b-F10","dblGAT201b-F11"))
+  )
+head(platemap, n=10)
 
 
 ```
@@ -90,10 +95,9 @@ annotated <- inner_join(reshaped, platemap, by="Well")
 
 ```{r plot_blank_ODs_7}
 
-ggplot(data=filter(annotated,Strain==""),
-           aes(x=Time, y=OD595, color=Strain, group = Well)) + 
+ggplot(data=filter(annotated,is.na(Strain)),
+           aes(x=Time, y=OD595, group = Well)) + 
        geom_line() + 
-       facet_grid(Media ~ .) +
        labs(x="Time (days)", y="Absorbance at 595 nm")
 ```
 
@@ -101,7 +105,7 @@ ggplot(data=filter(annotated,Strain==""),
 ```{r plot_individual_blank_wells_7}
 
 ggplot(data=filter(annotated,Well=="H1"), 
-       aes(x=Time, y=OD595, color=Strain, group = Well)) + 
+       aes(x=Time, y=OD595, group = Well)) + 
  
        geom_line() + 
      theme_bw()+
@@ -118,12 +122,8 @@ Remove well C12,H12,H4
 ```{r calc_blank_medians_7}
 
 blank_OD_summary <- annotated %>%
-  filter(Strain=="") %>%
-  filter(Well != "C12") %>%
-  filter(Well != "H12") %>%
-  filter(Well != "H4") %>%
- 
-    group_by(Media) %>%
+   filter(is.na(Strain), Time < 1/24) %>%
+  group_by(Media) %>%
   summarise(OD_median=median(OD595),
             OD_mean=mean(OD595),
             OD_max=max(OD595),
@@ -146,10 +146,10 @@ normalisedOD <- annotated %>%
 ```{r plot_all_At7}
 
 ggplot(data=normalisedOD %>%
-                      filter(Strain != ""), 
+                     filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
        geom_line() + 
-       scale_y_continuous(limits=c(0,0.025),expand=c(0,0))+
+       scale_y_continuous(limits=c(0,0.1),expand=c(0,0))+
        facet_wrap(Strain ~ .)+
   
        labs(x = "Time(Hrs)",
@@ -164,11 +164,11 @@ ggplot(data=normalisedOD %>%
 
 ggplot(data=normalisedOD  %>%
         
-                     filter(Strain != ""), 
+                    filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        
        stat_summary(fun = "median", geom = "line", size = 0.5) +
-       scale_y_continuous(limits=c(0,0.025),expand=c(0,0), breaks = c(0, 0.01, 0.02)) +
+       scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
   
        labs(x = "Number of Days",
             y = "Absorbance (595nm)",
@@ -205,11 +205,11 @@ ggsave("../Results/AllSummary_At7.png",width = 8,height=5)
 
 ggplot(data=normalisedOD  %>%
          
-                     filter(Strain != ""), 
+                     filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        geom_line(aes(group = Well), size = 0.2, alpha = 0.2) + 
        stat_summary(fun = "median", geom = "line", size = 0.5) +
-       scale_y_continuous(limits=c(0,0.025),expand=c(0,0), breaks = c(0, 0.01, 0.02)) +
+       scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
   
        labs(x = "Number of Days",
             y = "Absorbance (595nm)",

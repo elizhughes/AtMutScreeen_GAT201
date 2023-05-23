@@ -2,7 +2,7 @@
 title: "Atmutscreen_plate2"
 author: "Liz Hughes"
 date: "2023/04/05"
-output: output:
+output: 
   html_document:
     toc: yes
     toc_depth: 2
@@ -20,9 +20,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 # At Plate reader assay 2 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees
-Note: This is a repeat of AT Plate reader assay 1. Plate 1 was run by Zhenzhen and plate 2 was run by Bing as training.
+Note: This is a repeat of At mutagenesis Plate reader assay 1. Plate 1 was run by Zhenzhen He and plate 2 was run by Bing Du as training.
 
-Test WT KN99-alpha and GAT201 deletion mutant 003(Madhani), and At dbl-GAT201 mutant P2.7ZH_A1-A9 from Plate 1_P2,7ZH(glycerol stock) and At dbl-GAT201 mutant P2.28EH_A1-A9 from Plate 1_P2.28EH(glycerol stock) in RPMI at 37 degrees.
+Test WT KN99-alpha and GAT201 deletion mutant 003(Madhani), and At dbl-GAT201 mutant P2.7ZH_A1-A9 from Plate 1_P2,7ZH(glycerol stock, called dblGAT201a) and At dbl-GAT201 mutant P2.28EH_A1-A9 from Plate 1_P2.28EH(glycerol stock, called dblGAT201b) in RPMI at 37 degrees.
 1 Bioreps, 3 Techreps each.
 Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
 Seed at OD 600nm = 0.2 , 200 ul per well.
@@ -73,8 +73,13 @@ summary(reshaped)
 
 ```{r Load_platemap_2}
 
-platemap <- read.csv("../Input/20230405_RPMI_Atmut_screen_Plate2_setup.csv")
-head(platemap, n=50)
+platemap <- read.csv("../Input/20230405_RPMI_Atmut_screen_Plate2_setup.csv") %>%     
+  dplyr::mutate(
+    Strain = factor(Strain, 
+                    levels = c("KN99 (WT)", "GAT201", "P2.7A1", "P2.7A2","P2.7A3","P2.7A4","P2.7A5","P2.7A6","P2.7A7","P2.7A8","P2.7A9","P2.28A1", "P2.28A2","P2.28A3","P2.28A4","P2.28A5","P2.28A6","P2.28A7","P2.28A8","P2.28A9"),
+                    labels = c("WT", "gat201∆", "dblGAT201a-A1", "dblGAT201a-A2","dblGAT201a-A3","dblGAT201a-A4","dblGAT201a-A5","dblGAT201a-A6","dblGAT201a-A7","dblGAT201a-A8","dblGAT201a-A9", "dblGAT201b-A1", "dblGAT201b-A2","dblGAT201b-A3","dblGAT201b-A4","dblGAT201b-A5","dblGAT201b-A6","dblGAT201b-A7","dblGAT201b-A8","dblGAT201b-A9"))
+  )
+head(platemap, n=10)
 
 
 ```
@@ -91,18 +96,17 @@ annotated <- inner_join(reshaped, platemap, by="Well")
 
 ```{r plot_blank_ODs_2}
 
-ggplot(data=filter(annotated,Strain==""),
-           aes(x=Time, y=OD595, color=Strain, group = Well)) + 
-       geom_line() + 
-       facet_grid(Media ~ .) +
-       labs(x="Time (days)", y="Absorbance at 595 nm")
+ggplot(data=filter(annotated,is.na(Strain)),
+          aes(x=Time, y=OD595,  group = Well)) + 
+          geom_line() + 
+          labs(x="Time (days)", y="Absorbance at 595 nm")
 ```
 
 
 ```{r plot_individual_blank_wells_2}
 
 ggplot(data=filter(annotated,Well=="H3"), 
-       aes(x=Time, y=OD595, color=Strain, group = Well)) + 
+       aes(x=Time, y=OD595, group = Well)) + 
  
        geom_line() + 
      theme_bw()+
@@ -119,10 +123,9 @@ Remove well h12,h3
 ```{r calc_blank_medians_2}
 
 blank_OD_summary <- annotated %>%
-  filter(Strain=="") %>%
+   filter(is.na(Strain), Time < 1/24) %>%
   filter(Well != "H3") %>%
-  filter(Well != "H12") %>%
-    group_by(Media) %>%
+  group_by(Media) %>%
   summarise(OD_median=median(OD595),
             OD_mean=mean(OD595),
             OD_max=max(OD595),
@@ -145,10 +148,10 @@ normalisedOD <- annotated %>%
 ```{r plot_all_2}
 
 ggplot(data=normalisedOD %>%
-                      filter(Strain != ""), 
+                       filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
        geom_line() + 
-       scale_y_continuous(limits=c(0,0.06),expand=c(0,0))+
+       scale_y_continuous(limits=c(0,0.15),expand=c(0,0))+
        facet_wrap(Strain ~ .)+
   
        labs(x = "Time(Hrs)",
@@ -163,11 +166,11 @@ ggplot(data=normalisedOD %>%
 ```{r plot_stat_summary_At2}
 
 ggplot(data=normalisedOD  %>%
-          dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A1","P2.7A2","P2.7A3","P2.7A4","P2.7A5","P2.7A6","P2.7A7","P2.7A8","P2.7A9","P2.28A1","P2.28A2","P2.28A3","P2.28A4","P2.28A5","P2.28A6","P2.28A7","P2.28A8","P2.28A9" )))%>%
-                     filter(Strain != ""), 
+          #dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A1","P2.7A2","P2.7A3","P2.7A4","P2.7A5","P2.7A6","P2.7A7","P2.7A8","P2.7A9","P2.28A1","P2.28A2","P2.28A3","P2.28A4","P2.28A5","P2.28A6","P2.28A7","P2.28A8","P2.28A9" )))%>%
+                     filter( !is.na(Strain) ),  
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
         stat_summary(fun = "median", geom = "line", size = 0.5) +
-       scale_y_continuous(limits=c(0,0.05),expand=c(0,0), breaks = c(0, 0.25, 0.05)) +
+       scale_y_continuous(limits=c(0,0.12),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
        labs(x = "Number of Days",
             y = "Absorbance (595nm)",
             title = "At mutant screen", subtitle = "Plate 2: RPMI at 37 degrees") +
@@ -201,12 +204,12 @@ ggsave("../Results/AllSummary_At2.png",width = 8,height=5)
 
 
 ggplot(data=normalisedOD  %>%
-          dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A1","P2.7A2","P2.7A3","P2.7A4","P2.7A5","P2.7A6","P2.7A7","P2.7A8","P2.7A9","P2.28A1","P2.28A2","P2.28A3","P2.28A4","P2.28A5","P2.28A6","P2.28A7","P2.28A8","P2.28A9" )))%>%
-                     filter(Strain != ""), 
+          #dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A1","P2.7A2","P2.7A3","P2.7A4","P2.7A5","P2.7A6","P2.7A7","P2.7A8","P2.7A9","P2.28A1","P2.28A2","P2.28A3","P2.28A4","P2.28A5","P2.28A6","P2.28A7","P2.28A8","P2.28A9" )))%>%
+                     filter( !is.na(Strain) ),  
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        geom_line(aes(group = Well), size = 0.2, alpha = 0.2) + 
        stat_summary(fun = "median", geom = "line", size = 0.5) +
-       scale_y_continuous(limits=c(0,0.05),expand=c(0,0), breaks = c(0, 0.25, 0.05)) +
+       scale_y_continuous(limits=c(0,0.12),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
    
        labs(x = "Number of Days",
             y = "Absorbance (595nm)",

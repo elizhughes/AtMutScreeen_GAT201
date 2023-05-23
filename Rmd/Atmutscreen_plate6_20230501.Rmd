@@ -2,7 +2,7 @@
 title: "Atmutscreen_plate6"
 author: "Liz Hughes"
 date: "2023/05/01"
-output: output:
+output: 
   html_document:
     toc: yes
     toc_depth: 2
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # At Plate reader assay 6 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees
 
-Test At dbl-GAT201 mutant P2.28EH_C5-C12 and D1-D12 and E1 from Plate1_P2.28EH(glycerol stock) in RPMI at 37 degrees..
+Test At dbl-GAT201 mutant P2.28EH_C5-C12 and D1-D12 and E1 from Plate1_P2.28EH(glycerol stock, called dblGAT201b) in RPMI at 37 degrees..
 1 Bioreps, 3 Techreps each.
 Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
 Seed at OD 600nm = 0.2 , 200 ul per well.
@@ -72,8 +72,13 @@ summary(reshaped)
 
 ```{r Load_platemap_6}
 
-platemap <- read.csv("../Input/20230428_RPMI_Atmut_screen_Plate6_setup.csv")
-head(platemap, n=50)
+platemap <- read.csv("../Input/20230428_RPMI_Atmut_screen_Plate6_setup.csv") %>%     
+  dplyr::mutate(
+    Strain = factor(Strain, 
+                   levels = c("P2.28C5", "P2.28C6","P2.28C7","P2.28C8","P2.28C9","P2.28C10","P2.28C11","P2.28C12","P2.28D1","P2.28D2", "P2.28D3","P2.28D4","P2.28D5","P2.28D6","P2.28D7","P2.28D8","P2.28D9","P2.28D10","P2.28D11","P2.28D12","P2.28E1"),
+                    labels = c("dblGAT201b-C5", "dblGAT201b-C6","dblGAT201b-C7","dblGAT201b-C8","dblGAT201b-C9","dblGAT201b-C10","dblGAT201b-C11","dblGAT201b-C12","dblGAT201b-D1","dblGAT201b-D2", "dblGAT201b-D3","dblGAT201b-D4","dblGAT201b-D5","dblGAT201b-D6","dblGAT201b-D7","dblGAT201b-D8","dblGAT201b-D9","dblGAT201b-D10","dblGAT201b-D11","dblGAT201b-D12","dblGAT201b-E1"))
+  )
+head(platemap, n=10)
 
 
 ```
@@ -90,10 +95,9 @@ annotated <- inner_join(reshaped, platemap, by="Well")
 
 ```{r plot_blank_ODs_6}
 
-ggplot(data=filter(annotated,Strain==""),
-           aes(x=Time, y=OD595, color=Strain, group = Well)) + 
+ggplot(data=filter(annotated,is.na(Strain)),
+           aes(x=Time, y=OD595,  group = Well)) + 
        geom_line() + 
-       
        labs(x="Time (days)", y="Absorbance at 595 nm")
 ```
 
@@ -101,7 +105,7 @@ ggplot(data=filter(annotated,Strain==""),
 ```{r plot_individual_blank_wells_6}
 
 ggplot(data=filter(annotated,Well=="G12"), 
-       aes(x=Time, y=OD595, color=Strain, group = Well)) + 
+       aes(x=Time, y=OD595, group = Well)) + 
  
        geom_line() + 
      theme_bw()+
@@ -112,13 +116,13 @@ ggplot(data=filter(annotated,Well=="G12"),
 
 These are very stable.
 
-## Calculate median OD for blank wells for each growth medium RPMI
+## Calculate median OD for blank wells for each growth medium RPMI in the first hour only
 
 
 ```{r calc_blank_medians_6}
 
 blank_OD_summary <- annotated %>%
-                    filter(Strain=="") %>%
+                     filter(is.na(Strain), Time < 1/24) %>%
                     group_by(Media) %>%
                     summarise( OD_median=median(OD595),
                                 OD_mean=mean(OD595),
@@ -142,10 +146,10 @@ normalisedOD <- annotated %>%
 ```{r plot_all_At6}
 
 ggplot(data=normalisedOD %>%
-                      filter(Strain != ""), 
+                      filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
        geom_line() + 
-       scale_y_continuous(limits=c(0,0.025),expand=c(0,0))+
+       scale_y_continuous(limits=c(0,0.1),expand=c(0,0))+
        facet_wrap(Strain ~ .)+
   
        labs(x = "Time(Hrs)",
@@ -160,11 +164,11 @@ ggplot(data=normalisedOD %>%
 
 ggplot(data=normalisedOD  %>%
      
-                     filter(Strain != ""), 
+                    filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        
        stat_summary(fun = "median", geom = "line", size = 0.5) +
-       scale_y_continuous(limits=c(0,0.025),expand=c(0,0), breaks = c(0, 0.01, 0.02)) +
+       scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
   
        labs(x = "Number of Days",
             y = "Absorbance (595nm)",
@@ -201,11 +205,11 @@ ggsave("../Results/AllSummary_At6.png",width = 8,height=5)
 
 ggplot(data=normalisedOD  %>%
        
-                     filter(Strain != ""), 
+                    filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        geom_line(aes(group = Well), size = 0.2, alpha = 0.2) + 
        stat_summary(fun = "median", geom = "line", size = 0.5) +
-       scale_y_continuous(limits=c(0,0.025),expand=c(0,0), breaks = c(0, 0.01, 0.02)) +
+       scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
   
        labs(x = "Number of Days",
             y = "Absorbance (595nm)",
