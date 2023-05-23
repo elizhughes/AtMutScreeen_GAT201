@@ -52,3 +52,51 @@ Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
 Seed at OD 600nm = 0.2 , 200 ul per well.
 Run for 300 cycles.
 
+# At Plate reader assay 8 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees. 16-05-2023
+
+ At dbl-GAT201 mutant P2.28ZH_E2, E4-e7, E9-E12, F1-F11 from Plate 1_P2.28EH(glycerol stock, called dblGAT201b)  in RPMI at 37 degrees.
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 138 cycles.
+
+# At Plate reader assay 9 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees
+
+ At dbl-GAT201 mutant P2.7ZH_E4-E7, E10-E12,F1-F12, G1-G3 from Plate 1_P2,7ZH(glycerol stock, called dblGAT201a)  in RPMI at 37 degrees.
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 139 cycles.
+
+# At Plate reader assay 10 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees
+
+ At dbl-GAT201 mutant P2.28ZH_F12, G1-G12,H1-H7 from Plate 1_P2,28EH(glycerol stock, called dblGAT201a)  in RPMI at 37 degrees.
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 135 cycles.
+
+# At Plate reader assay 11 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees
+
+ At dbl-GAT201 mutant P2.7ZH_G4-G12, H1-H11 from Plate 1_P2,7ZH(glycerol stock, called dblGAT201a)  in RPMI at 37 degrees.
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 136 cycles.
+
+# At Plate reader assay 12 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees
+
+ At dbl-GAT201 mutant P2.28ZH_H8-H11 from Plate 1_P2,28EH(glycerol stock, AA1-AA12,BB1-BB4 from Plate 2_P2,28EH(glycerol stock, called dblGAT201b)  in RPMI at 37 degrees.
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 149 cycles.
+
+# At Plate reader assay 13 : Check phenotype of dblGAT201 At mutants in RPMI at 37 degrees
+
+ At dbl-GAT201 mutant P2.7ZH_AA1-AA12, BB1-BB8 from Plate 2_P2,7ZH(glycerol stock, called dblGAT201a)  in RPMI at 37 degrees.
+1 Bioreps, 3 Techreps each.
+Grow 5ml culture from colony (1 colony = 1 Biorep) in YPD, 30C, 180 rpm ON.
+Seed at OD 600nm = 0.2 , 200 ul per well.
+Run for 150 cycles.
+

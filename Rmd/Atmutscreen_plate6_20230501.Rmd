@@ -53,7 +53,7 @@ rawdata <- read.csv("../Input/20230428_Atmutant_Screen_plate6_csv.csv")
 
 ```{r mutate_time_6}
 
- rawdata_day<-mutate(rawdata, Time = Time/86400)
+ rawdata_hour<-mutate(rawdata, Time = Time/3600)
 
 ```
 
@@ -61,7 +61,7 @@ rawdata <- read.csv("../Input/20230428_Atmutant_Screen_plate6_csv.csv")
 
 ```{r reshape_6}
 
-reshaped <- melt(rawdata_day, id=c("Time", "Temp"), 
+reshaped <- melt(rawdata_hour, id=c("Time", "Temp"), 
                               variable.name="Well",
                               value.name="OD595")
 
@@ -98,7 +98,7 @@ annotated <- inner_join(reshaped, platemap, by="Well")
 ggplot(data=filter(annotated,is.na(Strain)),
            aes(x=Time, y=OD595,  group = Well)) + 
        geom_line() + 
-       labs(x="Time (days)", y="Absorbance at 595 nm")
+       labs(x="Hours", y="Absorbance at 595 nm")
 ```
 
 
@@ -109,7 +109,7 @@ ggplot(data=filter(annotated,Well=="G12"),
  
        geom_line() + 
      theme_bw()+
-     labs(x="Time (hrs)", y="Absorbance at 595 nm")
+     labs(x="Hours", y="Absorbance at 595 nm")
 
 ```
 
@@ -148,11 +148,12 @@ normalisedOD <- annotated %>%
 ggplot(data=normalisedOD %>%
                       filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
-       geom_line() + 
+       geom_line() +
+  scale_x_continuous(limits = c(0,40)) +
        scale_y_continuous(limits=c(0,0.1),expand=c(0,0))+
        facet_wrap(Strain ~ .)+
   
-       labs(x = "Time(Hrs)",
+       labs(x = "Hours",
             y = "Absorbance (595nm)") +
        theme(text = element_text(size = 20))+
        theme_bw()
@@ -168,9 +169,10 @@ ggplot(data=normalisedOD  %>%
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        
        stat_summary(fun = "median", geom = "line", size = 0.5) +
+  scale_x_continuous(limits = c(0,40)) +
        scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
   
-       labs(x = "Number of Days",
+       labs(x = "Hours",
             y = "Absorbance (595nm)",
             title = "At mutant screen", subtitle = "Plate 6: RPMI at 37 degrees") +
            
@@ -209,9 +211,10 @@ ggplot(data=normalisedOD  %>%
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        geom_line(aes(group = Well), size = 0.2, alpha = 0.2) + 
        stat_summary(fun = "median", geom = "line", size = 0.5) +
+  scale_x_continuous(limits = c(0,40)) +
        scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
   
-       labs(x = "Number of Days",
+       labs(x = "Hours",
             y = "Absorbance (595nm)",
             title = "At mutant screen", subtitle = "Plate 6: RPMI at 37 degrees") +
                   theme_bw() +

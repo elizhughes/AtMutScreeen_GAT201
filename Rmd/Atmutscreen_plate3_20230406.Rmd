@@ -53,7 +53,7 @@ rawdata <- read.csv("../Input/20230406_RPMI_Atmut_screen_Plate3_csv.csv")
 
 ```{r mutate_time_3}
 
- rawdata_day<-mutate(rawdata, Time = Time/86400)
+ rawdata_hour<-mutate(rawdata, Time = Time/3600)
 
 ```
 
@@ -61,7 +61,7 @@ rawdata <- read.csv("../Input/20230406_RPMI_Atmut_screen_Plate3_csv.csv")
 
 ```{r reshape_3}
 
-reshaped <- melt(rawdata_day, id=c("Time", "Temp"), 
+reshaped <- melt(rawdata_hour, id=c("Time", "Temp"), 
                               variable.name="Well",
                               value.name="OD595")
 
@@ -98,7 +98,7 @@ annotated <- inner_join(reshaped, platemap, by="Well")
 ggplot(data=filter(annotated,is.na(Strain)),
            aes(x=Time, y=OD595, group = Well)) + 
           geom_line() + 
-          labs(x="Time (days)", y="Absorbance at 595 nm")
+          labs(x="Hours", y="Absorbance at 595 nm")
 ```
 
 
@@ -108,7 +108,7 @@ ggplot(data=filter(annotated,Well=="A1"),
        aes(x=Time, y=OD595, group = Well)) + 
        geom_line() + 
        theme_bw()+
-       labs(x="Time (hrs)", y="Absorbance at 595 nm")
+       labs(x="Hours", y="Absorbance at 595 nm")
 
 ```
 
@@ -148,10 +148,11 @@ ggplot(data=normalisedOD %>%
                      filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
        geom_line() + 
+  scale_x_continuous(limits = c(0,24)) +
        scale_y_continuous(limits=c(0,0.12),expand=c(0,0))+
        facet_wrap(Strain ~ .)+
   
-       labs(x = "Time(Hrs)",
+       labs(x = "Hours",
             y = "Absorbance (595nm)") +
        theme(text = element_text(size = 20))+
        theme_bw()
@@ -163,13 +164,13 @@ ggplot(data=normalisedOD %>%
 ```{r plot_stat_summary_At3}
 
 ggplot(data=normalisedOD %>%
-          #dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A10","P2.7A11","P2.7A12","P2.7B1","P2.7B2","P2.7B3","P2.7B4","P2.7B5","P2.7B6","P2.28A10","P2.28A11","P2.28A12","P2.28B1","P2.28B2","P2.28B3","P2.28B4","P2.28B5","P2.28B6" )))%>%
-                     filter( !is.na(Strain) ), 
+                             filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        stat_summary(fun = "median", geom = "line", size = 0.5) +
+  scale_x_continuous(limits = c(0,24)) +
        scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
   
-       labs(x = "Number of Days",
+       labs(x = "Hours",
             y = "Absorbance (595nm)",
             title = "At mutant screen", subtitle = "Plate 3: RPMI at 37 degrees") +
        theme_bw() +
@@ -203,12 +204,12 @@ ggsave("../Results/AllSummary_At3.png",width = 8,height=5)
 ```{r plot_all_stat_summary_At3}
 
 ggplot(data=normalisedOD %>%
-          #dplyr::mutate(Strain = factor(Strain, levels = c("KN99 (WT)", "GAT201", "P2.7A10","P2.7A11","P2.7A12","P2.7B1","P2.7B2","P2.7B3","P2.7B4","P2.7B5","P2.7B6","P2.28A10","P2.28A11","P2.28A12","P2.28B1","P2.28B2","P2.28B3","P2.28B4","P2.28B5","P2.28B6" )))%>%
-                     filter( !is.na(Strain) ), 
+                               filter( !is.na(Strain) ), 
                       aes(x=Time, y=OD_corrected, color=Strain)) + 
        stat_summary(fun = "median", geom = "line", size = 0.5) +
+  scale_x_continuous(limits = c(0,24)) +
        scale_y_continuous(limits=c(0,0.1),expand=c(0,0), breaks = c(0, 0.05, 0.1)) +
-       labs(x = "Number of Days",
+       labs(x = "Hours",
             y = "Absorbance (595nm)",
             title = "At mutant screen", subtitle = "Plate 3: RPMI at 37 degrees") +
        theme_bw() +
